@@ -184,6 +184,7 @@ async fn auth_middleware_internal(
                 if let Ok(Some(user_token)) =
                     crate::modules::user_token_db::get_token_by_value(token)
                 {
+                    crate::proxy::pipeline::budget::set_allow_local_files(false);
                     let identity = UserTokenIdentity {
                         token_id: user_token.id,
                         token: user_token.token,
@@ -266,6 +267,7 @@ async fn auth_middleware_internal(
                 if let Ok(Some(user_token)) =
                     crate::modules::user_token_db::get_token_by_value(token)
                 {
+                    crate::proxy::pipeline::budget::set_allow_local_files(false);
                     let identity = UserTokenIdentity {
                         token_id: user_token.id,
                         token: user_token.token,
