@@ -112,7 +112,7 @@ fn run_command_with_timeout(
     use std::sync::mpsc;
     use std::thread;
 
-    let mut child = cmd
+    let child = cmd
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::null())
         .spawn()
@@ -274,7 +274,6 @@ pub fn resolve_wsl_home_dirs(custom_home: Option<&str>) -> Vec<PathBuf> {
     candidates
 }
 
-#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 fn collect_unique_wsl_distros(homes: &[PathBuf]) -> Vec<String> {
     let mut seen = std::collections::HashSet::new();
     let mut distros = Vec::new();
@@ -314,7 +313,7 @@ fn sync_account_to_wsl_inner(account: &crate::models::Account, custom_home: Opti
         return;
     }
 
-    for wsl_home in target_homes {
+    for wsl_home in &target_homes {
         crate::modules::logger::log_info(&format!(
             "[WSL Sync] Syncing account credentials to WSL home: {}",
             wsl_home.display()
@@ -380,8 +379,12 @@ fn sync_account_to_wsl_inner(account: &crate::models::Account, custom_home: Opti
     }
 
     // 3. 全部主目录凭据落盘后，按分发版去重向 WSL 运行态中的 language_server 发送重载信号
+    let target_distros = collect_unique_wsl_distros(&target_homes);
+    #[cfg(not(target_os = "windows"))]
+    let _ = &target_distros;
+
     #[cfg(target_os = "windows")]
-    for distro in collect_unique_wsl_distros(&target_homes) {
+    for distro in target_distros {
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x08000000;
         let args = build_wsl_language_server_reload_args(&distro);
